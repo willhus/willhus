@@ -2,6 +2,9 @@ package server;
 
 import javafx.util.Pair;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -9,6 +12,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import models.Course;
+import models.RegistrationForm;
+import exceptions.InvalidLineFormatException;
 
 public class Server {
 
@@ -19,6 +26,11 @@ public class Server {
     private ObjectInputStream objectInputStream;
     private ObjectOutputStream objectOutputStream;
     private final ArrayList<EventHandler> handlers;
+
+    private static final String COURSES_PATH = "data/cours.txt";
+    private static final String INSCRIPTION_PATH = "data/inscription.txt";
+    private static final String COURSE_ERROR_MSG = "Error: invalid line format, expected \"COURSE_ID\tCOURSE_NAME\tSEMESTER\"";
+    private static final String SESSION_ERROR_MSG = "Error: invalid line format, expected \"SEMESTER\tCOURSE_ID\tSTUDENT_ID\tFIRST_NAME\tLAST_NAME\tEMAIL\"";
 
     public Server(int port) throws IOException {
         this.server = new ServerSocket(port, 1);
@@ -91,7 +103,36 @@ public class Server {
      @param arg la session pour laquelle on veut récupérer la liste des cours
      */
     public void handleLoadCourses(String arg) {
-        // TODO: implémenter cette méthode
+        try {
+            // Create scanner
+            java.util.Scanner scanner = new java.util.Scanner(new FileInputStream(COURSES_PATH));
+
+            // Create list
+            ArrayList<Course> courses = new ArrayList<>();
+
+            // Iterate through lines
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                String[] values = line.split("\t");
+                if (values.length != 3) {
+                    throw new InvalidLineFormatException(COURSE_ERROR_MSG);
+                }
+
+                // Get courses with selected semester
+                if (values[2].equals(arg)) {
+                    courses.add(new Course(values[1], values[0], values[2]));
+                }
+            }
+
+            // Return list of courses
+            this.objectOutputStream.writeObject(courses);
+            this.objectOutputStream.flush();
+
+            // Close scanner
+            scanner.close();
+        } catch (IOException | InvalidLineFormatException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -100,7 +141,30 @@ public class Server {
      La méthode gére les exceptions si une erreur se produit lors de la lecture de l'objet, l'écriture dans un fichier ou dans le flux de sortie.
      */
     public void handleRegistration() {
-        // TODO: implémenter cette méthode
+        try {
+            // Read RegistrationForm object from the socket
+            RegistrationForm registrationForm = (RegistrationForm) objectInputStream.readObject();
+            Course course = registrationForm.getCourse();
+
+            // Write the registration information in the specified format
+            String registrationData = String.format("%s\t%s\t%s\t%s\t%s\t%s%n",
+                course.getSession(),
+                course.getCode(),
+                registrationForm.getMatricule(),
+                registrationForm.getPrenom(),
+                registrationForm.getNom(),
+                registrationForm.getEmail()
+            );
+
+            // Write the registration data to the file
+            try (FileWriter fw = new FileWriter(INSCRIPTION_PATH, true);
+                BufferedWriter bw = new BufferedWriter(fw)) {
+
+                bw.write(registrationData);
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 }
 
