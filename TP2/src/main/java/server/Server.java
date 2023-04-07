@@ -1,10 +1,14 @@
 package server;
 
 import javafx.util.Pair;
+import server.exceptions.InvalidLineFormatException;
+import server.models.Course;
+import server.models.RegistrationForm;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -12,10 +16,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import models.Course;
-import models.RegistrationForm;
-import exceptions.InvalidLineFormatException;
 
 public class Server {
 
@@ -103,16 +103,15 @@ public class Server {
      @param arg la session pour laquelle on veut récupérer la liste des cours
      */
     public void handleLoadCourses(String arg) {
-        try {
-            // Create scanner
-            java.util.Scanner scanner = new java.util.Scanner(new FileInputStream(COURSES_PATH));
-
+        System.out.println("READING FROM " + COURSES_PATH);
+        try (BufferedReader reader = new BufferedReader(new FileReader(COURSES_PATH))) {
             // Create list
+            System.out.println("FILE OPENED");
             ArrayList<Course> courses = new ArrayList<>();
 
             // Iterate through lines
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
+            String line;
+            while ((line = reader.readLine()) != null) {
                 String[] values = line.split("\t");
                 if (values.length != 3) {
                     throw new InvalidLineFormatException(COURSE_ERROR_MSG);
@@ -127,9 +126,6 @@ public class Server {
             // Return list of courses
             this.objectOutputStream.writeObject(courses);
             this.objectOutputStream.flush();
-
-            // Close scanner
-            scanner.close();
         } catch (IOException | InvalidLineFormatException e) {
             e.printStackTrace();
         }
