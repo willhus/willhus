@@ -8,6 +8,9 @@ public class ServerLauncher {
         try {
             server = new Server(PORT);
             System.out.println("Server is running...");
+            String currentDir = System.getProperty("user.dir");
+            System.out.println("Current directory: " + currentDir);
+
             server.run();
         } catch (Exception e) {
             e.printStackTrace();

@@ -5,9 +5,8 @@ import server.exceptions.InvalidLineFormatException;
 import server.models.Course;
 import server.models.RegistrationForm;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileReader;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -16,19 +15,21 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Scanner;
 
 public class Server {
 
     public final static String REGISTER_COMMAND = "INSCRIRE";
     public final static String LOAD_COMMAND = "CHARGER";
+    public final static String QUIT_COMMAND = "QUITTER";
     private final ServerSocket server;
     private Socket client;
     private ObjectInputStream objectInputStream;
     private ObjectOutputStream objectOutputStream;
     private final ArrayList<EventHandler> handlers;
 
-    private static final String COURSES_PATH = "data/cours.txt";
-    private static final String INSCRIPTION_PATH = "data/inscription.txt";
+    private static final String COURSES_PATH = "willhus/TP2/src/main/java/server/data/cours.txt";
+    private static final String INSCRIPTION_PATH = "willhus/TP2/src/main/java/server/data/inscription.txt";
     private static final String COURSE_ERROR_MSG = "Error: invalid line format, expected \"COURSE_ID\tCOURSE_NAME\tSEMESTER\"";
     private static final String SESSION_ERROR_MSG = "Error: invalid line format, expected \"SEMESTER\tCOURSE_ID\tSTUDENT_ID\tFIRST_NAME\tLAST_NAME\tEMAIL\"";
 
@@ -66,7 +67,7 @@ public class Server {
 
     public void listen() throws IOException, ClassNotFoundException {
         String line;
-        if ((line = this.objectInputStream.readObject().toString()) != null) {
+        while ((line = this.objectInputStream.readObject().toString()) != null) {
             Pair<String, String> parts = processCommandLine(line);
             String cmd = parts.getKey();
             String arg = parts.getValue();
@@ -92,6 +93,10 @@ public class Server {
             handleRegistration();
         } else if (cmd.equals(LOAD_COMMAND)) {
             handleLoadCourses(arg);
+        } else if (cmd.equals(QUIT_COMMAND)) {
+            System.out.println("Au revoir!");
+        } else {
+            System.out.println("NOT A VALID COMMAND??");
         }
     }
 
@@ -103,17 +108,22 @@ public class Server {
      @param arg la session pour laquelle on veut récupérer la liste des cours
      */
     public void handleLoadCourses(String arg) {
-        System.out.println("READING FROM " + COURSES_PATH);
-        try (BufferedReader reader = new BufferedReader(new FileReader(COURSES_PATH))) {
+        try {
+            // Open file
+            File file = new File(COURSES_PATH);
+            Scanner scanner = new Scanner(file);
+
             // Create list
-            System.out.println("FILE OPENED");
+            System.out.println("Absolute path is: " + file.getAbsolutePath());
             ArrayList<Course> courses = new ArrayList<>();
 
             // Iterate through lines
             String line;
-            while ((line = reader.readLine()) != null) {
+            while (scanner.hasNextLine()) {
+                line = scanner.nextLine();
                 String[] values = line.split("\t");
                 if (values.length != 3) {
+                    scanner.close();
                     throw new InvalidLineFormatException(COURSE_ERROR_MSG);
                 }
 
@@ -122,6 +132,9 @@ public class Server {
                     courses.add(new Course(values[1], values[0], values[2]));
                 }
             }
+
+            // Close scanner
+            scanner.close();
 
             // Return list of courses
             this.objectOutputStream.writeObject(courses);

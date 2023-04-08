@@ -12,6 +12,7 @@ import server.models.RegistrationForm;
 public class Client {
     public final static String REGISTER_COMMAND = "INSCRIRE";
     public final static String LOAD_COMMAND = "CHARGER";
+    public final static String QUIT_COMMAND = "QUITTER";
 
     private final String host;
     private final int port;
@@ -45,6 +46,12 @@ public class Client {
             while (running) {
                 // Choose a semester
                 String choice = this.chooseSemester(scanner);
+
+                if (choice.equalsIgnoreCase("q")) {
+                    outputStream.writeObject(QUIT_COMMAND);
+                    break;
+                }
+
                 this.semester = SEMESTERS.get(choice);
                 outputStream.writeObject(LOAD_COMMAND + " " + this.semester);
                 outputStream.flush();
@@ -53,20 +60,39 @@ public class Client {
                 this.courses = (List<Course>) inputStream.readObject();
                 choice = this.chooseRegOrBack(scanner);
 
+                if (choice.equalsIgnoreCase("q")) {
+                    outputStream.writeObject(QUIT_COMMAND);
+                    break;
+                }
+                
                 if (choice.equals("1")) {
                     continue;
                 }
 
                 // Choose a course
                 RegistrationForm form = this.chooseCourse(scanner);
+
+                if (form == null) {
+                    outputStream.writeObject(QUIT_COMMAND);
+                    break;
+                }
+
                 outputStream.writeObject(REGISTER_COMMAND);
                 outputStream.flush();
                 outputStream.writeObject(form);
                 outputStream.flush();
                 System.out.printf("Félicitations! Inscription réussie de %s au cours de %s.%n",
                 form.getPrenom(), form.getCourse().getCode());
-            }
 
+                // Decide if you want to continue or exit
+                System.out.println("Voulez-vous continuer? (O/N)");
+                String decision = scanner.nextLine();
+                if (decision.equalsIgnoreCase("N")) {
+                    running = false;
+                } else {
+                    System.out.println();
+                }
+            }
         } catch (ClassNotFoundException | IOException e) {
             e.printStackTrace();
         }
@@ -83,8 +109,8 @@ public class Client {
             SEMESTERS.forEach((k, v) -> System.out.printf("%s. %s%n", k, v));
             System.out.printf("> Choix: ");
             String choice = scanner.nextLine();
-            if (!choice.equals("1") && !choice.equals("2") && !choice.equals("3")) {
-                System.out.println("Erreur: choix invalide");
+            if (!choice.equals("1") && !choice.equals("2") && !choice.equals("3") && !choice.equalsIgnoreCase("q")) {
+                System.out.printf("Erreur: choix invalide%n%n");
             } else {
                 return choice;
             }
@@ -96,15 +122,15 @@ public class Client {
             System.out.printf("Les cours offerts pendant la session d'%s sont:%n", this.semester.toLowerCase());
             int ct = 1;
             for (Course course: this.courses) {
-                System.out.printf("%d. %s%n", ct++, course.getName());
+                System.out.printf("%d. %s\t%s%n", ct++, course.getCode(), course.getName());
             }
             System.out.println("> Choix:");
             System.out.println("1. Consulter les cours offerts pour une autre session");
             System.out.println("2. Inscription à un cours");
             System.out.printf("> Choix: ");
             String choice = scanner.nextLine();
-            if (!choice.equals("1") && !choice.equals("2")) {
-                System.out.println("Erreur: choix invalide");
+            if (!choice.equals("1") && !choice.equals("2") && !choice.equalsIgnoreCase("q")) {
+                System.out.printf("Erreur: choix invalide%n%n");
             } else {
                 return choice;
             }
@@ -134,6 +160,12 @@ public class Client {
 
             // Course not found
             System.out.println("Erreur: code de cours invalide");
+            System.out.println("Voulez-vous quitter? (O/N)");
+            if (scanner.nextLine().equalsIgnoreCase("n")) {
+                return null;
+            } else {
+                System.out.println();
+            }
         }
     }
 }
