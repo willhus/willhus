@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<VBox spacing="10" alignment="CENTER" xmlns:fx="http://javafx.com/fxml" fx:controller="client.ClientController">
+    <HBox spacing="20">
+        <VBox spacing="10">
+            <Label text="Liste des cours">
+                <font>
+                    <Font size="18.0" />
+                </font>
+            </Label>
+            <TableView fx:id="coursesTable">
+                <columns>
+                    <TableColumn fx:id="courseCodeColumn" text="Code" />
+                    <TableColumn fx:id="courseNameColumn" text="Cours" />
+                </columns>
+            </TableView>
+            <HBox spacing="10">
+                <ComboBox fx:id="semesterComboBox">
+                    <items>
+                        <FXCollections fx:factory="observableArrayList">
+                            <String fx:value="Automne" />
+                            <String fx:value="Hiver" />
+                            <String fx:value="Ete" />
+                        </FXCollections>
+                    </items>
+                </ComboBox>
+                <Button text="Charger" onAction="#loadCourses" />
+            </HBox>
+        </VBox>
+
+        <VBox spacing="10">
+            <Label text="Formulaire d'inscription">
+                <font>
+                    <Font size="18.0" />
+                </font>
+            </Label>
+            <TextField fx:id="firstNameField" promptText="Prénom" />
+            <TextField fx:id="lastNameField" promptText="Nom" />
+            <TextField fx:id="emailField" promptText="Email" />
+            <TextField fx:id="studentIdField" promptText="Matricule" />
+            <Button text="Envoyer" onAction="#registerCourse" />
+        </VBox>
+    </HBox>
+</VBox>
