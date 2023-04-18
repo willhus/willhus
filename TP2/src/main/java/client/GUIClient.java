@@ -10,6 +10,9 @@ import java.io.IOException;
 
 public class GUIClient extends Application {
 
+    /**
+     * La fonction de JavaFX qui est nécessaire pour commencer l'application
+     */
     @Override
     public void start(Stage primaryStage) {
         try {
@@ -23,6 +26,10 @@ public class GUIClient extends Application {
         }
     }
 
+    /**
+     * Le main, pour démarrer l'application
+     * @param args
+     */
     public static void main(String[] args) {
         launch(args);
     }

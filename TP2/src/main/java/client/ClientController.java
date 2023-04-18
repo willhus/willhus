@@ -36,7 +36,7 @@ public class ClientController {
     @FXML
     protected void loadCourses(ActionEvent event) {
         // Send "CHARGER" request to the server and update the table.
-        // For demonstration purposes, let's create a sample list of courses
+        // Sample list of courses for demonstration
         ObservableList<Course> courses = FXCollections.observableArrayList(
             new Course("Introduction to Computer Science", "COMP-101", "Automne"),
             new Course("Data Structures and Algorithms", "COMP-102", "Hiver")

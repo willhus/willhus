@@ -9,6 +9,14 @@ import java.util.Scanner;
 import server.models.Course;
 import server.models.RegistrationForm;
 
+/**
+ * Classe Client: console-based client
+ * 
+ * Setup: Il suffit de simplement run ce fichier, et le client va commencer.
+ * 1- L'utilisateur doit d'abord choisir son semestre.
+ * 2- Par la suite, les cours associés à ce semestre seront affichés à l'écran.
+ * 3- L'utilisateur a ensuite l'option de choisir de s'inscrire à un des cours du semestre en entrant les informations demandées, ou il peut retourner à 1-
+ */
 public class Client {
     public final static String REGISTER_COMMAND = "INSCRIRE";
     public final static String LOAD_COMMAND = "CHARGER";
@@ -20,19 +28,27 @@ public class Client {
     private String semester;
     private List<Course> courses;
 
+    /**
+     * Constructeur pour le Client.
+     * @param host, l'hôte pour la connection
+     * @param port, le port à choisir pour établir la connection
+     */
     public Client(String host, int port) {
         this.host = host;
         this.port = port;
     }
 
+    // Liste des semestres
     private static final HashMap<String, String> SEMESTERS = new HashMap<>();
-
     static {
         SEMESTERS.put("1", "Automne");
         SEMESTERS.put("2", "Hiver");
         SEMESTERS.put("3", "Ete");
     }
 
+    /**
+     * Fonction principale du client, qui exécute une boucle infinie pour voir les semestres et les cours associés, et pour s'inscrire aux cours.
+     */
     public void start() {
         try (Socket socket = new Socket(host, port);
             ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
@@ -98,11 +114,21 @@ public class Client {
         }
     }
 
+    /**
+     * Le main qui crée un client et qui le démarre
+     * @param args, pas utilisé
+     */
     public static void main(String[] args) {
         Client client = new Client("localhost", 1337);
         client.start();
     }
 
+    /**
+     * Fonction pour choisir un semestre
+     * @param scanner pour lire le user input
+     * @return choice, le choix du semestre
+     * @return Q, pour quitter le client
+     */
     private String chooseSemester(Scanner scanner) {
         while (true) {
             System.out.println("Veuillez choisir la session pour laquelle vous voulez consulter la liste des cours:");
@@ -117,6 +143,12 @@ public class Client {
         }
     }
 
+    /**
+     * Fonction pour choisir de s'inscrire ou retourner
+     * @param scanner pour lire le user input
+     * @return choice, le choix de l'utilisateur
+     * @return Q, pour quitter le client
+     */
     private String chooseRegOrBack(Scanner scanner) {
         while (true) {
             System.out.printf("Les cours offerts pendant la session d'%s sont:%n", this.semester.toLowerCase());
@@ -137,6 +169,12 @@ public class Client {
         }
     }
 
+    /**
+     * Fonction pour choisir un cours
+     * @param scanner pour lire le user input
+     * @return choice, le choix du cours
+     * @return Q, pour quitter le client
+     */
     private RegistrationForm chooseCourse(Scanner scanner) {
         while (true) {
             System.out.println("Veuillez saisir votre prénom:");
@@ -161,7 +199,7 @@ public class Client {
             // Course not found
             System.out.println("Erreur: code de cours invalide");
             System.out.println("Voulez-vous quitter? (O/N)");
-            if (scanner.nextLine().equalsIgnoreCase("n")) {
+            if (scanner.nextLine().equalsIgnoreCase("o")) {
                 return null;
             } else {
                 System.out.println();
